@@ -1,11 +1,11 @@
 {
     "schema_version": 2,
-    "commit": "d3bf4c772ab5400cab07392d9b5b8b821b53ba9d",
-    "indexed_at": "2026-10-27T11:52:08Z",
+    "commit": "145e6ec86eb94462240eeb44ee1bef3a33d5f001",
+    "indexed_at": "2026-10-27T12:06:15Z",
     "project": "Users-crase-OS-AutoTappo-macos",
-    "nodes": 510,
-    "edges": 1125,
+    "nodes": 511,
+    "edges": 1127,
     "original_size": 2162688,
-    "compressed_size": 126790,
+    "compressed_size": 127174,
     "compression_level": 3
 }

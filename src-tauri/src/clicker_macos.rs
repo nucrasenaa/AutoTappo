@@ -187,6 +187,11 @@ fn post_key(key: u16, down: bool) {
         return;
     }
     unsafe {
+        // Keep the event as a physical function-key signal without a Unicode
+        // payload. Some macOS text fields otherwise turn F17-F20 into square
+        // replacement characters, and unhandled events can trigger the alert
+        // sound. WuwaTappo consumes the hardware key code from the event tap.
+        CGEventKeyboardSetUnicodeString(event, 0, std::ptr::null());
         CGEventPost(KCG_HID_EVENT_TAP, event);
         CFRelease(event);
     }
@@ -224,6 +229,11 @@ extern "C" {
     fn CGRequestPostEventAccess() -> bool;
     fn CGEventSourceKeyState(state: i32, key: u16) -> bool;
     fn CGEventCreateKeyboardEvent(source: *mut c_void, key: u16, down: bool) -> *mut c_void;
+    fn CGEventKeyboardSetUnicodeString(
+        event: *mut c_void,
+        string_length: usize,
+        unicode_string: *const u16,
+    );
     fn CGEventPost(tap: u32, event: *mut c_void);
 }
 
