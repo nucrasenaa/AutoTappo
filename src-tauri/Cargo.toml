@@ -6,7 +6,7 @@ authors = ["AutoTappo"]
 edition = "2021"
 rust-version = "1.77"
 
-# 显式指定二进制产物名，让 cargo build 输出 AutoTappo.exe
+# Keep a stable binary name across Windows and macOS.
 [[bin]]
 name = "AutoTappo"
 path = "src/main.rs"

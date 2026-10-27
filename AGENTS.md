@@ -8,6 +8,11 @@
 
 **AutoTappo** 是一款专为库洛游戏《鸣潮》（Wuthering Waves）官方桌面宠物挂件 **WuwaTappo**（鸣潮桌宠）打造的**超轻量、纯静默、高拟真后台连点与数据看板助手**。
 
+> **跨平台说明（2026-10）**：Windows backend 继续使用下文记录的 Win32
+> 区域/消息方案；macOS backend 已改为 CoreGraphics 原生 ARM64，支持后台
+> 功能键挂机，但自动开箱在 macOS 上会安全地报告 `unsupported`，不会向前台
+> 应用发送盲目鼠标点击。
+
 ### 核心体验准则
 1. **绝对 0 鼠标干涉**：严禁任何物理鼠标指针抖动、位移或拖拽；
 2. **完全后台无感**：用户在正常打字聊天、写代码、玩游戏、看视频时，桌宠在后台全速累计有效点击数；
@@ -225,8 +230,12 @@ autotappo/
 │       ├── main.rs        # 程序入口、DPI感知初始化、模块装配、窗口拦截、ExitRequested保护
 │       ├── tray.rs        # 托盘图标、左键单击呼出、托盘右键上下文菜单
 │       ├── window.rs      # 按需创建与销毁主窗口 (452x620，彻底释放 WebView2 渲染内存)
-│       ├── clicker.rs     # 后台静默连点工作线程 (F21~F24发射、礼貌避让、动态热键监听)
-│       ├── chest.rs       # 自动开箱引擎 (窗口发现/区域读取/锚点定位/遮挡检测/像素判定/点击注入)
+│       ├── clicker.rs     # 平台 facade；按 target 选择 clicker_windows/macos/stub
+│       ├── clicker_windows.rs # Win32 F21~F24 发射、礼貌避让、动态热键监听
+│       ├── clicker_macos.rs # CoreGraphics F17~F20 发射、权限检查、VK 映射
+│       ├── chest.rs       # 平台 facade；按 target 选择 chest_windows/macos/stub
+│       ├── chest_windows.rs # 原 Windows 自动开箱引擎
+│       ├── chest_macos.rs # macOS 安全占位状态（暂不盲点）
 │       └── commands.rs    # IPC 接口 (get_status, toggle_running, set_speed, set_hotkey, reset_count, minimize, quit, get_chest_status, set_auto_chest, relaunch_as_admin)
 ├── web/
 │   ├── index.html         # 精致看板 UI (状态卡片、三档速度、自定义热键胶囊、自动开箱控制卡、更新弹窗)
@@ -273,6 +282,13 @@ autotappo/
 8. **双 Git 远端协同**：
    - GitHub: `origin` (`https://github.com/To0Ru/AutoTappo.git`)
    - Gitee: `gitee` (`git@gitee.com:To0Ru/AutoTappo.git`)
+
+9. **macOS 原生 ARM64 backend**：
+   - `clicker_macos.rs` 使用 CoreGraphics `CGEventCreateKeyboardEvent` +
+     `CGEventPost`，不移动鼠标、不抢焦点；
+   - 兼容前端原有 Windows VK 持久化值，后端在发送前映射为 macOS key code；
+   - macOS 构建不读取 Windows manifest，也不链接 `user32/gdi32/winmm`；
+   - 自动开箱不会伪造屏幕点击，macOS UI 明确显示暂未支持。
 
 ---
 

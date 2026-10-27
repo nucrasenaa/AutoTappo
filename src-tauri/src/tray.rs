@@ -29,12 +29,21 @@ pub fn build(app: &tauri::App, inner: Arc<Inner>) -> tauri::Result<TrayIcon> {
                 let _ = window::ensure(app);
             }
             "toggle" => {
-                let prev = inner_for_menu.clicker.running.fetch_xor(true, Ordering::SeqCst);
-                println!("[Tray] 切换运行状态: {}", if !prev { "运行中" } else { "已暂停" });
+                let prev = inner_for_menu
+                    .clicker
+                    .running
+                    .fetch_xor(true, Ordering::SeqCst);
+                println!(
+                    "[Tray] 切换运行状态: {}",
+                    if !prev { "运行中" } else { "已暂停" }
+                );
             }
             "quit" => {
                 inner_for_menu.shutting_down.store(true, Ordering::SeqCst);
-                inner_for_menu.clicker.shutdown.store(true, Ordering::SeqCst);
+                inner_for_menu
+                    .clicker
+                    .shutdown
+                    .store(true, Ordering::SeqCst);
                 app.exit(0);
             }
             _ => {}

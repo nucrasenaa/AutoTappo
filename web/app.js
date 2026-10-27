@@ -631,6 +631,7 @@
     "need-admin": "需要管理员权限才能开箱",
     error: "点击投递失败，稍后重试",
     stopped: "已停止",
+    unsupported: "macOS 原生版暂未支持自动开箱",
   };
 
   // 开关状态由前端（localStorage）唯一决定，绝不用后端快照反向覆盖：
@@ -642,7 +643,7 @@
     applySlot(slotRight, s.right);
     if (chestHint) chestHint.textContent = STATE_HINT[s.state] || s.detail || "待机中";
     if (chestCount) chestCount.textContent = `已开启 ${s.opens_ok || 0} 次`;
-    if (chestWarn) chestWarn.hidden = !(autoChest && s.elevated === false);
+    if (chestWarn) chestWarn.hidden = !(autoChest && s.elevated === false && s.state !== "unsupported");
   }
 
   async function pollChestStatus() {

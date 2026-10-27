@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078D4?logo=windows" alt="Platform">
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%2F11%20%7C%20macOS%20ARM64-0078D4" alt="Platform">
   <img src="https://img.shields.io/badge/Release-免安装绿色单文件-brightgreen" alt="Release">
   <img src="https://img.shields.io/badge/License-MIT-orange" alt="License">
 </p>
@@ -39,14 +39,16 @@
 - 🛡️ **专治桌宠乱跑与消失**
   完美规避桌宠官方内置的热键冲突（避开 F8 切屏、F9 老板键隐藏），绝不会让你挂着挂着桌宠突然失踪或跳到其他屏幕上。
 
-- 🎁 **自动开箱**
+- 🎁 **自动开箱（Windows）**
   累计点击数解锁的宝箱冷却一到，自动替你点掉，不用再盯着桌宠等倒计时。开箱全程走官方界面的真实点击，不伪造任何网络请求，安全可控；面板上实时显示左右两个宝箱的状态（就绪 / 冷却中）与累计开启次数。
+
+  > macOS 原生版目前会明确显示“暂未支持自动开箱”，不会向当前前台应用发送盲目鼠标点击。
 
 - 📊 **会话点击与状态看板**
   直观显示本次挂机已发送的连点次数，支持一键清零与速度切换；桌宠底栏原生同步显示累计总分，双端状态清晰互补。
 
 - 🖥️ **轻量托盘常驻**
-  支持最小化到 Windows 右下角系统托盘。关闭面板时自动释放界面渲染内存（后台常驻仅占用极少系统资源，几乎 0 CPU、几兆内存）。
+  支持 Windows 系统托盘与 macOS 菜单栏常驻。关闭面板时自动释放界面渲染内存（后台常驻仅占用极少系统资源）。
 
 ---
 
@@ -61,11 +63,21 @@
 
 > **系统要求**：Windows 10 / 11（64位）
 
+### macOS 原生版（Apple Silicon）
+
+本分支已加入不依赖 Wine/CrossOver/虚拟机的 macOS ARM64 backend：
+
+- macOS 13 或更新版本，Apple Silicon（M1/M2/M3/M4）
+- 下载 `AutoTappo_0.2.0_aarch64.dmg`，打开后将 `AutoTappo.app` 拖入“应用程序”
+- 在“系统设置 → 隐私与安全性”中允许 AutoTappo 的 **辅助功能**；如需全局按键状态检测，也允许 **输入监控**
+- macOS backend 使用 CoreGraphics 非打印功能键，不移动鼠标、不抢焦点
+- 自动开箱暂未移植；开关会显示明确的不可用状态，不会误点其他应用
+
 ---
 
 ## 🚀 快速上手
 
-1. **启动程序**：双击下载好的 `AutoTappo.exe`，默认自动收进右下角任务栏托盘；
+1. **启动程序**：Windows 双击 `AutoTappo.exe`；macOS 打开 `AutoTappo.app`，默认常驻托盘/菜单栏；
 2. **快捷键控制**：
 
    | 按键 | 功能 | 说明 |
@@ -82,12 +94,12 @@
      - `退出`：彻底退出后台守护
    - *提示：直接点击面板右上角的「✕ 关闭」，程序会自动最小化收进托盘继续后台守护，不会中断挂机。*
 
-4. **开启自动开箱**：
+4. **开启自动开箱（仅 Windows）**：
    - 在面板【自动开箱】卡片右侧拨动开关即可启用；
    - 卡片会实时显示左右宝箱状态：<span>就绪</span>（橙色）、<span>冷却中</span>（蓝色）；
    - 桌宠被其他窗口盖住、或正在被拖动时，程序会自动等你露出桌宠，不会乱点。
 
-> **关于管理员权限**：从 v0.2.0 起，程序**双击即以管理员权限运行**（会弹一次系统的 UAC 确认框，点「是」即可）。
+> **Windows 管理员权限**：从 v0.2.0 起，程序**双击即以管理员权限运行**（会弹一次系统的 UAC 确认框，点「是」即可）。
 > 这是因为鸣潮桌宠官方程序本身固定以管理员运行，自动开箱需要同等权限才能点击它。挂机连点本身并不需要管理员，但为了开箱可用，程序统一提权，省去你手动右键的麻烦。
 
 ---
@@ -96,12 +108,14 @@
 
 如果你希望自行审查代码并从源代码编译，可以按照以下步骤构建：
 
-### 1. 前置依赖准备
+### Windows
+
+#### 1. 前置依赖准备
 - **Rust 编译环境**：安装 [Rustup](https://rustup.rs/)（选择 `stable-x86_64-pc-windows-msvc`）；
 - **C++ 构建工具**：安装 Visual Studio 2022 生成工具（含 C++ 桌面开发套件）；
 - **WebView2 运行时**：Windows 10 / 11 系统默认已自带。
 
-### 2. 获取代码与安装 Tauri CLI
+#### 2. 获取代码与安装 Tauri CLI
 ```bash
 # 克隆仓库
 git clone https://github.com/To0Ru/AutoTappo.git
@@ -111,13 +125,13 @@ cd autotappo
 cargo install tauri-cli --version "^2.0"
 ```
 
-### 3. 本地调试与开发
+#### 3. 本地调试与开发
 ```bash
 # 启动开发调试模式（支持前端热更新与控制台日志）
 cargo tauri dev
 ```
 
-### 4. 生产打包发行
+#### 4. 生产打包发行
 ```bash
 # 构建高度优化的 Release 单文件 EXE 与安装包
 cargo tauri build
@@ -125,6 +139,26 @@ cargo tauri build
 编译生成的最终产物位于：
 - **绿色单文件**：`src-tauri/target/release/AutoTappo.exe`
 - **安装包**：`src-tauri/target/release/bundle/nsis/AutoTappo_*_x64-setup.exe`
+
+### macOS 原生构建
+
+```bash
+xcode-select --install
+brew install rustup
+rustup-init -y
+
+git clone https://github.com/To0Ru/AutoTappo.git
+cd AutoTappo
+npx --yes @tauri-apps/cli@^2 build
+```
+
+输出文件：
+
+- **应用**：`src-tauri/target/release/bundle/macos/AutoTappo.app`
+- **DMG**：`src-tauri/target/release/bundle/dmg/AutoTappo_*_aarch64.dmg`
+
+macOS 的 `clicker_macos.rs` ใช้ CoreGraphics แทน Win32 API และแยกจาก
+backend Windows ด้วย `#[cfg(target_os = "...")]`; จึง build เป็น ARM64 native ได้โดยไม่ต้องใช้ Wine หรือ CrossOver.
 
 ---
 
@@ -142,6 +176,12 @@ cargo tauri build
 原因：鸣潮桌宠官方程序本身固定以管理员身份运行，向它投递点击需要同等级权限，否则会被系统拦截。**挂机连点本身不需要管理员**，但为了自动开箱可用，程序统一提权，省去手动右键的麻烦。
 
 > 如果你只用挂机连点、不需要自动开箱，也可以在旧版（v0.1.0）上使用免提权版本。
+
+#### Q: macOS 为什么看得到自动开箱卡片但不能用？
+macOS 原生版目前只移植了后台功能键连点。Windows 依赖 `DesktopCatInput`、Win32 区域和定向消息的自动开箱机制没有直接的 macOS 等价物；因此 macOS 会安全地报告 `unsupported`，不会把点击发送到当前前台窗口。
+
+#### Q: macOS 需要管理员权限吗？
+不需要管理员权限，但必须在系统设置中授予辅助功能权限，否则 CoreGraphics 不允许发送合成按键事件。
 
 #### Q: 自动开箱会封号吗？
 不会。程序**不发送任何伪造的网络请求**，只在桌宠界面上模拟一次真实的鼠标点击，开箱鉴权完全由官方客户端自己完成，行为与你自己手点完全一致。

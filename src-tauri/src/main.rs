@@ -1,5 +1,8 @@
-// Release 发布版禁用 Windows 控制台黑框
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// Release 发布版隐藏 Windows 控制台黑框；macOS 不使用该 crate attribute。
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
 
 mod chest;
 mod clicker;
@@ -27,7 +30,8 @@ pub struct Inner {
 pub struct AppState(pub Arc<Inner>);
 
 fn main() {
-    // 多屏 / 高 DPI 下必须拿到物理像素坐标，区域与截图像素才能对齐
+    // Windows uses this for physical-pixel region/screenshot alignment. The
+    // macOS implementation is intentionally a no-op.
     chest::ensure_dpi_aware();
 
     let app = tauri::Builder::default()
@@ -101,7 +105,9 @@ fn main() {
         // 托盘常驻守护时必须拦住；只有用户在托盘菜单真正点击「退出」时才放行。
         if let tauri::RunEvent::ExitRequested { api, .. } = event {
             let state = handle.state::<AppState>();
-            if !state.0.shutting_down.load(Ordering::SeqCst) && state.0.tray_ok.load(Ordering::SeqCst) {
+            if !state.0.shutting_down.load(Ordering::SeqCst)
+                && state.0.tray_ok.load(Ordering::SeqCst)
+            {
                 api.prevent_exit();
             }
         }
