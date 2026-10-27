@@ -12,16 +12,22 @@ use crate::{window, Inner};
 /// 构建托盘图标句柄。
 /// 必须将其存放在 `Inner` 共享状态中，否则句柄析构后托盘图标会随之消失。
 pub fn build(app: &tauri::App, inner: Arc<Inner>) -> tauri::Result<TrayIcon> {
-    let show = MenuItem::with_id(app, "show", "显示控制面板", true, None::<&str>)?;
-    let toggle = MenuItem::with_id(app, "toggle", "启动 / 暂停挂机 (F6)", true, None::<&str>)?;
+    let show = MenuItem::with_id(app, "show", "Show control panel", true, None::<&str>)?;
+    let toggle = MenuItem::with_id(
+        app,
+        "toggle",
+        "Start / pause automation (F6)",
+        true,
+        None::<&str>,
+    )?;
     let sep = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, "quit", "退出 AutoTappo", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit AutoTappo", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show, &toggle, &sep, &quit])?;
 
     let inner_for_menu = Arc::clone(&inner);
 
     let mut builder = TrayIconBuilder::with_id("main")
-        .tooltip("AutoTappo · 鸣潮桌宠挂机助手")
+        .tooltip("AutoTappo · WuwaTappo Background Assistant")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(move |app, event| match event.id.as_ref() {
@@ -34,8 +40,8 @@ pub fn build(app: &tauri::App, inner: Arc<Inner>) -> tauri::Result<TrayIcon> {
                     .running
                     .fetch_xor(true, Ordering::SeqCst);
                 println!(
-                    "[Tray] 切换运行状态: {}",
-                    if !prev { "运行中" } else { "已暂停" }
+                    "[Tray] Automation state: {}",
+                    if !prev { "running" } else { "paused" }
                 );
             }
             "quit" => {

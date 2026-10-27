@@ -1,92 +1,92 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AutoTappo · 鸣潮桌宠后台挂机助手</title>
+  <title>AutoTappo · WuwaTappo Background Assistant</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-container">
-    <!-- 顶部标题栏 -->
+    <!-- Header -->
     <header class="app-header">
       <div class="logo-area">
         <img src="logo.png" alt="AutoTappo Logo" class="app-logo">
         <div class="logo-text">
           <h1>AutoTappo</h1>
-          <span class="sub-title">WuwaTappo 智能挂机</span>
+          <span class="sub-title">WuwaTappo Background Assistant</span>
         </div>
       </div>
       
-      <!-- 右上角：极简无感版本胶囊与更新指示器 (告别突兀黄色，融入暗色美学) -->
-      <button id="btn-bell" class="version-badge-btn" title="点击检查更新与版本日志">
+      <!-- Minimal version badge and update indicator -->
+      <button id="btn-bell" class="version-badge-btn" title="Check for updates and view release notes">
         <svg class="bell-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
-        <span class="version-text">v0.1.0</span>
+        <span class="version-text">v0.2.0</span>
         <span class="update-dot" id="update-dot"></span>
       </button>
     </header>
 
-    <!-- 核心状态卡片 -->
+    <!-- Main status card -->
     <section class="status-card">
       <div class="pulse-ring" id="status-ring"></div>
       <div class="status-content">
-        <span class="status-badge" id="status-badge">已暂停</span>
+        <span class="status-badge" id="status-badge">Paused</span>
         <div class="sent-counter">
-          <span class="counter-label">本次模拟点击</span>
+          <span class="counter-label">Clicks this session</span>
           <div class="counter-row">
             <span class="counter-value" id="counter-value">0</span>
-            <button id="btn-reset" class="mini-btn" title="清零本次计数">↺</button>
+            <button id="btn-reset" class="mini-btn" title="Reset session count">↺</button>
           </div>
         </div>
       </div>
       <button id="btn-toggle" class="main-toggle-btn">
         <span id="btn-toggle-icon">▶</span>
-        <span id="btn-toggle-text">开始挂机 (F6)</span>
+        <span id="btn-toggle-text">Start automation (F6)</span>
       </button>
     </section>
 
-    <!-- 速度档位调节 -->
+    <!-- Speed control -->
     <section class="control-section">
       <div class="section-header-row">
-        <span class="section-label">⚡ 速度档位调节</span>
+        <span class="section-label">⚡ Speed</span>
       </div>
       <div class="speed-selector">
         <button class="speed-btn active" data-speed="0">
-          <span class="speed-title">休闲拟真</span>
-          <span class="speed-desc">~10 次/秒 · 办公推荐</span>
+          <span class="speed-title">Relaxed</span>
+          <span class="speed-desc">~10 clicks/s · Recommended</span>
         </button>
         <button class="speed-btn" data-speed="1">
-          <span class="speed-title">快速进阶</span>
-          <span class="speed-desc">~25 次/秒 · 快速刷分</span>
+          <span class="speed-title">Fast</span>
+          <span class="speed-desc">~25 clicks/s · Quick farming</span>
         </button>
         <button class="speed-btn" data-speed="2">
-          <span class="speed-title">极速狂暴</span>
-          <span class="speed-desc">~50 次/秒 · 极限冲刺</span>
+          <span class="speed-title">Extreme</span>
+          <span class="speed-desc">~50 clicks/s · Maximum speed</span>
         </button>
       </div>
     </section>
 
-    <!-- 可自定义全局热键胶囊 -->
+    <!-- Custom global hotkey -->
     <div class="hotkey-pill" id="hotkey-pill">
       <div class="hotkey-left">
         <svg class="pill-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="3"></rect>
           <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M18 12h.01M8 16h8"></path>
         </svg>
-        <span class="hotkey-label">全局启停热键</span>
+        <span class="hotkey-label">Global start/stop hotkey</span>
       </div>
       <div class="hotkey-right">
-        <button id="btn-hotkey" class="hotkey-badge" title="点击后按键盘任意键设置新快捷键">
+        <button id="btn-hotkey" class="hotkey-badge" title="Click, then press any key to set a new hotkey">
           <span id="lbl-hotkey">F6</span>
         </button>
-        <span class="hotkey-tip" id="hotkey-tip">点击修改</span>
+        <span class="hotkey-tip" id="hotkey-tip">Click to change</span>
       </div>
     </div>
 
-    <!-- 自动开箱 -->
+    <!-- Auto chest -->
     <section class="chest-card" id="chest-card">
       <div class="chest-head">
         <div class="chest-title-wrap">
@@ -99,13 +99,13 @@
           </div>
           <div class="chest-text">
             <div class="chest-title-row">
-              <strong class="chest-title">自动开箱</strong>
-              <span class="chest-badge" id="chest-badge">已关闭</span>
+              <strong class="chest-title">Auto Chest</strong>
+              <span class="chest-badge" id="chest-badge">Disabled</span>
             </div>
-            <p class="chest-desc" id="chest-desc">宝箱就绪后自动开启，不影响挂机</p>
+            <p class="chest-desc" id="chest-desc">Automatically open ready chests without interrupting automation</p>
           </div>
         </div>
-        <button class="switch" id="chest-switch" role="switch" aria-checked="false" title="开启 / 关闭自动开箱">
+        <button class="switch" id="chest-switch" role="switch" aria-checked="false" title="Enable / disable Auto Chest">
           <span class="switch-knob"></span>
         </button>
       </div>
@@ -113,35 +113,35 @@
       <div class="chest-slots">
         <div class="chest-slot" id="slot-left" data-state="idle">
           <span class="slot-dot"></span>
-          <span class="slot-name">左宝箱</span>
+          <span class="slot-name">Left chest</span>
           <span class="slot-state">—</span>
         </div>
         <div class="chest-slot" id="slot-right" data-state="idle">
           <span class="slot-dot"></span>
-          <span class="slot-name">右宝箱</span>
+          <span class="slot-name">Right chest</span>
           <span class="slot-state">—</span>
         </div>
       </div>
 
       <div class="chest-foot">
-        <span class="chest-hint" id="chest-hint">待机中</span>
-        <span class="chest-count" id="chest-count">已开启 0 次</span>
+        <span class="chest-hint" id="chest-hint">Idle</span>
+        <span class="chest-count" id="chest-count">Opened 0 times</span>
       </div>
 
       <div class="chest-warn" id="chest-warn" hidden>
-        <span>开箱需要管理员权限</span>
-        <button class="chest-warn-btn" id="btn-elevate">以管理员重启</button>
+        <span>Administrator permission is required for chest opening</span>
+        <button class="chest-warn-btn" id="btn-elevate">Restart as administrator</button>
       </div>
     </section>
 
-    <!-- 底部控制栏 -->
+    <!-- Footer controls -->
     <footer class="app-footer">
-      <button id="btn-dock" class="footer-btn" hidden>隐藏 Dock 图标</button>
-      <button id="btn-hide" class="footer-btn">收进系统托盘</button>
-      <button id="btn-quit" class="footer-btn danger">退出程序</button>
+      <button id="btn-dock" class="footer-btn" hidden>Hide Dock icon</button>
+      <button id="btn-hide" class="footer-btn">Hide to menu bar</button>
+      <button id="btn-quit" class="footer-btn danger">Quit</button>
     </footer>
 
-    <!-- 更新弹窗 (Modal) -->
+    <!-- Update modal -->
     <div class="modal-backdrop" id="update-modal">
       <div class="modal-card">
         <div class="modal-header">
@@ -150,40 +150,40 @@
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
-            <h3>版本与更新</h3>
+            <h3>Version &amp; Updates</h3>
           </div>
           <button class="modal-close-btn" id="btn-modal-close">✕</button>
         </div>
 
         <div class="modal-body">
           <div class="version-row">
-            <span class="v-label">当前运行版本</span>
-            <span class="v-val current" id="lbl-cur-version">v0.1.0</span>
+            <span class="v-label">Current version</span>
+            <span class="v-val current" id="lbl-cur-version">v0.2.0</span>
           </div>
           <div class="version-row">
-            <span class="v-label">最新发布版本</span>
-            <span class="v-val latest" id="lbl-latest-version">检测中...</span>
+            <span class="v-label">Latest release</span>
+            <span class="v-val latest" id="lbl-latest-version">Checking...</span>
           </div>
 
           <div class="update-status-box" id="update-status-box">
             <div class="spinner" id="update-spinner" style="display: none;"></div>
-            <p id="update-status-text">点击下方按钮获取最新版本信息</p>
+            <p id="update-status-text">Click the button below to check for the latest version</p>
           </div>
 
-          <!-- 当有新版本时显示的仓库下载安装指引（GitHub / Gitee 双通道） -->
+          <!-- Download guidance shown when a new version is available -->
           <div class="update-guide-card" id="update-guide-card" style="display: none;">
             <div class="guide-header">
-              <span class="guide-tag">新版安装指引</span>
-              <span class="guide-tip">请前往任一仓库下载并安装新版本：</span>
+              <span class="guide-tag">Install the new version</span>
+              <span class="guide-tip">Download and install it from either repository:</span>
             </div>
-            <a id="link-github-repo" class="github-repo-url" href="https://github.com/To0Ru/AutoTappo/releases" target="_blank" title="点击在浏览器中打开 GitHub 仓库">
+            <a id="link-github-repo" class="github-repo-url" href="https://github.com/To0Ru/AutoTappo/releases" target="_blank" title="Open the GitHub repository in a browser">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"></path>
                 <line x1="8" y1="12" x2="16" y2="12"></line>
               </svg>
               <span id="lbl-github-repo-url">https://github.com/To0Ru/AutoTappo/releases</span>
             </a>
-            <a id="link-gitee-repo" class="github-repo-url gitee-repo-url" href="https://gitee.com/To0Ru/AutoTappo/releases" target="_blank" title="点击在浏览器中打开 Gitee 仓库（国内更快）">
+            <a id="link-gitee-repo" class="github-repo-url gitee-repo-url" href="https://gitee.com/To0Ru/AutoTappo/releases" target="_blank" title="Open the Gitee repository in a browser">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"></path>
                 <line x1="8" y1="12" x2="16" y2="12"></line>
@@ -193,7 +193,7 @@
           </div>
 
           <div class="changelog-area" id="changelog-area" style="display: none;">
-            <label class="cl-title">新版本亮点：</label>
+            <label class="cl-title">What's new:</label>
             <div class="cl-content" id="changelog-content"></div>
           </div>
         </div>
@@ -201,13 +201,13 @@
         <div class="modal-footer">
           <button id="btn-check-now" class="modal-btn primary">
             <span id="btn-check-icon">🔄</span>
-            <span id="btn-check-text">立即检查更新</span>
+            <span id="btn-check-text">Check now</span>
           </button>
           <a id="btn-download" class="modal-btn action" href="https://github.com/To0Ru/AutoTappo/releases" target="_blank" style="display: none;">
-            前往 GitHub 仓库安装新版 ↗
+            Install from GitHub ↗
           </a>
           <a id="btn-gitee" class="modal-btn action gitee-action" href="https://gitee.com/To0Ru/AutoTappo/releases" target="_blank" style="display: none;">
-            前往 Gitee 仓库 ↗
+            Install from Gitee ↗
           </a>
         </div>
       </div>

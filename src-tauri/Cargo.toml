@@ -1,7 +1,7 @@
 [package]
 name = "autotappo"
 version = "0.2.0"
-description = "《鸣潮》官方桌宠 WuwaTappo 智能后台挂机助手"
+description = "WuwaTappo background automation assistant"
 authors = ["AutoTappo"]
 edition = "2021"
 rust-version = "1.77"

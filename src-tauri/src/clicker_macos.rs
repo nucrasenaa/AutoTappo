@@ -147,9 +147,9 @@ fn log_state_change(running: bool) {
     println!(
         "[AutoTappo] {}",
         if running {
-            "挂机已开启"
+            "automation started"
         } else {
-            "挂机已暂停"
+            "automation paused"
         }
     );
 }

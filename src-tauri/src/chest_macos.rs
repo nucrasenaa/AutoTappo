@@ -38,7 +38,7 @@ impl Default for ChestSnapshot {
             enabled: false,
             elevated: false,
             state: "idle".into(),
-            detail: "เปิด WuwaTappo Global Mac เพื่อเชื่อมต่อระบบเปิดกล่อง".into(),
+            detail: "Start WuwaTappo Global Mac to connect Auto Chest".into(),
             left: "—".into(),
             right: "—".into(),
             opens_ok: 0,
@@ -91,25 +91,26 @@ fn update_snapshot(snapshot: &Mutex<ChestSnapshot>, enabled: bool, result: Resul
     match result {
         Ok(()) if enabled => {
             state.state = "relay-enabled".into();
-            state.detail = "已连接 WuwaTappo Global Mac；由目标应用自动判断并开启宝箱".into();
-            state.left = "目标应用管理".into();
-            state.right = "目标应用管理".into();
+            state.detail =
+                "Connected to WuwaTappo Global Mac; the target app manages chest opening".into();
+            state.left = "Managed by target app".into();
+            state.right = "Managed by target app".into();
         }
         Ok(()) => {
             state.state = "idle".into();
-            state.detail = "已关闭自动开箱".into();
+            state.detail = "Auto Chest disabled".into();
             state.left = "—".into();
             state.right = "—".into();
         }
         Err(error) if enabled => {
             state.state = "no-target".into();
-            state.detail = format!("未连接 WuwaTappo Global Mac：{error}");
+            state.detail = format!("WuwaTappo Global Mac is not connected: {error}");
             state.left = "—".into();
             state.right = "—".into();
         }
         Err(error) => {
             state.state = "error".into();
-            state.detail = format!("关闭自动开箱失败：{error}");
+            state.detail = format!("Failed to disable Auto Chest: {error}");
         }
     }
 }
@@ -130,7 +131,7 @@ impl ChestController {
         } else if let Ok(mut state) = self.snapshot.lock() {
             state.enabled = true;
             state.state = "connecting".into();
-            state.detail = "กำลังเชื่อมต่อ WuwaTappo Global Mac…".into();
+            state.detail = "Connecting to WuwaTappo Global Mac…".into();
         }
     }
 

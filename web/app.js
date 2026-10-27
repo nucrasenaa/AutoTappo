@@ -100,10 +100,10 @@
     // 1. 运行状态徽章
     if (statusBadge) {
       if (currentRunning) {
-        statusBadge.textContent = "运行中";
+        statusBadge.textContent = "Running";
         statusBadge.classList.add("running");
       } else {
-        statusBadge.textContent = "已暂停";
+        statusBadge.textContent = "Paused";
         statusBadge.classList.remove("running");
       }
     }
@@ -118,11 +118,11 @@
       if (currentRunning) {
         btnToggle.classList.add("running");
         btnToggleIcon.textContent = "⏸";
-        btnToggleText.textContent = `暂停挂机 (${currentHotkeyName})`;
+        btnToggleText.textContent = `Pause automation (${currentHotkeyName})`;
       } else {
         btnToggle.classList.remove("running");
         btnToggleIcon.textContent = "▶";
-        btnToggleText.textContent = `开始挂机 (${currentHotkeyName})`;
+        btnToggleText.textContent = `Start automation (${currentHotkeyName})`;
       }
     }
 
@@ -151,7 +151,7 @@
 
   // ---------------- 浏览器独立预览模式支持 ----------------
   if (!isTauri) {
-    console.info("💡 当前处于【纯浏览器预览模式】，已自动开启交互模拟与测试。");
+    console.info("💡 Running in browser preview mode; interaction simulation is enabled.");
     updateUI({
       running: false,
       speed_mode: 0,
@@ -236,7 +236,7 @@
         console.error("Failed to minimize:", err);
       }
     } else {
-      alert("【预览提示】在编译后的应用中，点击将无缝收进 Windows 系统托盘守护。");
+      alert("Preview mode: the packaged app will hide to the menu bar and keep running in the background.");
     }
   };
 
@@ -244,16 +244,27 @@
 
   // macOS menu-bar utility mode: keep the tray icon and control panel, but
   // optionally remove AutoTappo from the Dock. The preference is local-only.
-  const isMacOS = isTauri && /Macintosh|Mac OS X/i.test(navigator.userAgent);
+  const isMacOS =
+    isTauri && /Macintosh|Mac OS X/i.test(`${navigator.platform} ${navigator.userAgent}`);
   let hideDock = localStorage.getItem("autotappo.hideDock") === "1";
   const setDockVisibility = async () => {
     if (!isMacOS || !window.__TAURI__?.app?.setDockVisibility) return;
-    await window.__TAURI__.app.setDockVisibility(!hideDock);
+    const shouldHide = hideDock;
+    await window.__TAURI__.app.setDockVisibility(!shouldHide);
+
+    // Tauri uses macOS's TransformProcessType API. macOS ignores a hide call
+    // made immediately after a show call, so retry a hide after its cooldown.
+    if (shouldHide) {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      if (hideDock === shouldHide) {
+        await window.__TAURI__.app.setDockVisibility(false);
+      }
+    }
   };
   const renderDockButton = () => {
     if (!btnDock) return;
     btnDock.hidden = !isMacOS;
-    btnDock.textContent = hideDock ? "显示 Dock 图标" : "隐藏 Dock 图标";
+    btnDock.textContent = hideDock ? "Show Dock icon" : "Hide Dock icon";
     btnDock.setAttribute("aria-pressed", hideDock ? "true" : "false");
   };
   if (btnDock) {
@@ -269,7 +280,9 @@
     });
   }
   renderDockButton();
-  setDockVisibility().catch((err) => console.error("Failed to apply Dock visibility:", err));
+  if (hideDock) {
+    setDockVisibility().catch((err) => console.error("Failed to apply Dock visibility:", err));
+  }
 
   if (btnQuit) {
     btnQuit.addEventListener("click", async () => {
@@ -280,16 +293,16 @@
           console.error("Failed to quit app:", err);
         }
       } else {
-        alert("【预览提示】在编译后的应用中，点击将完全退出守护进程。");
+        alert("Preview mode: the packaged app will quit completely.");
       }
     });
   }
 
   // ---------------- 全局热键自定义录制逻辑 ----------------
   const FORBIDDEN_HOTKEYS = {
-    F7: "F7 为官方游戏模式键，无法绑定",
-    F8: "F8 为官方多屏幕切换键，无法绑定",
-    F9: "F9 为官方老板键隐藏键，无法绑定",
+    F7: "F7 is reserved by WuwaTappo game mode and cannot be assigned",
+    F8: "F8 is reserved by WuwaTappo display switching and cannot be assigned",
+    F9: "F9 is reserved by WuwaTappo hide mode and cannot be assigned",
   };
 
   function getWinVirtualKey(e) {
@@ -335,8 +348,8 @@
   function startRecording() {
     isRecordingHotkey = true;
     if (btnHotkey) btnHotkey.classList.add("recording");
-    if (lblHotkey) lblHotkey.textContent = "请按键...";
-    if (hotkeyTip) hotkeyTip.textContent = "按 Esc 取消";
+    if (lblHotkey) lblHotkey.textContent = "Press a key...";
+    if (hotkeyTip) hotkeyTip.textContent = "Press Esc to cancel";
 
     window.addEventListener("keydown", handleRecordKey, { capture: true });
   }
@@ -345,7 +358,7 @@
     isRecordingHotkey = false;
     if (btnHotkey) btnHotkey.classList.remove("recording");
     if (lblHotkey) lblHotkey.textContent = currentHotkeyName;
-    if (hotkeyTip) hotkeyTip.textContent = "点击修改";
+    if (hotkeyTip) hotkeyTip.textContent = "Click to change";
     window.removeEventListener("keydown", handleRecordKey, { capture: true });
   }
 
@@ -359,14 +372,14 @@
     }
 
     if (FORBIDDEN_HOTKEYS[e.key]) {
-      alert(`【提示】${FORBIDDEN_HOTKEYS[e.key]}，请换其他按键。`);
+      alert(`[Hint] ${FORBIDDEN_HOTKEYS[e.key]}. Choose another key.`);
       cancelRecording();
       return;
     }
 
     const result = getWinVirtualKey(e);
     if (!result) {
-      alert("【提示】请按下有效的功能键 (如 F1~F6, F10~F12, Home, PgUp, 数字小键盘等)");
+      alert("[Hint] Press a supported key such as F1-F6, F10-F12, Home, PgUp, or a numpad key.");
       cancelRecording();
       return;
     }
@@ -380,9 +393,9 @@
     if (lblHotkey) lblHotkey.textContent = currentHotkeyName;
     if (btnHotkey) btnHotkey.classList.remove("recording");
     if (hotkeyTip) {
-      hotkeyTip.textContent = "修改成功";
+      hotkeyTip.textContent = "Saved";
       setTimeout(() => {
-        hotkeyTip.textContent = "点击修改";
+        hotkeyTip.textContent = "Click to change";
       }, 1500);
     }
 
@@ -450,9 +463,9 @@
     if (!silent) {
       if (updateSpinner) updateSpinner.style.display = "inline-block";
       if (updateStatusBox) updateStatusBox.className = "update-status-box";
-      if (updateStatusText) updateStatusText.textContent = "正在通过 Gitee 国内高速通道检查最新版本...";
+      if (updateStatusText) updateStatusText.textContent = "Checking for the latest version through Gitee...";
       if (btnCheckNow) btnCheckNow.disabled = true;
-      if (btnCheckText) btnCheckText.textContent = "正在检查...";
+      if (btnCheckText) btnCheckText.textContent = "Checking...";
       if (changelogArea) changelogArea.style.display = "none";
       if (updateGuideCard) updateGuideCard.style.display = "none";
       if (btnDownload) btnDownload.style.display = "none";
@@ -514,7 +527,7 @@
     if (!silent) {
       if (updateSpinner) updateSpinner.style.display = "none";
       if (btnCheckNow) btnCheckNow.disabled = false;
-      if (btnCheckText) btnCheckText.textContent = "再次检查";
+      if (btnCheckText) btnCheckText.textContent = "Check again";
     }
 
     applyUpdateData(cachedLatestData, silent);
@@ -533,10 +546,10 @@
         if (updateDot) updateDot.classList.add("active");
         if (updateStatusBox) updateStatusBox.className = "update-status-box has-new";
         if (updateStatusText) {
-          updateStatusText.innerHTML = `🎉 <strong>发现新版本 ${latestTag} (${source} 源)</strong>`;
+          updateStatusText.innerHTML = `🎉 <strong>New version ${latestTag} available (${source})</strong>`;
         }
 
-        const body = latestData.body || latestData.description || "包含稳定性优化与体验升级。";
+        const body = latestData.body || latestData.description || "Includes stability and experience improvements.";
         if (changelogContent) changelogContent.textContent = body;
         if (changelogArea) changelogArea.style.display = "block";
 
@@ -568,7 +581,7 @@
       } else {
         if (updateDot) updateDot.classList.remove("active");
         if (updateStatusBox) updateStatusBox.className = "update-status-box is-latest";
-        if (updateStatusText) updateStatusText.textContent = `✨ 当前已是最新版本！(${source} 源同步)`;
+        if (updateStatusText) updateStatusText.textContent = `✨ You are up to date! (synced from ${source})`;
         if (changelogArea) changelogArea.style.display = "none";
         if (updateGuideCard) updateGuideCard.style.display = "none";
         if (btnDownload) btnDownload.style.display = "none";
@@ -580,7 +593,7 @@
       if (lblLatestVersion) lblLatestVersion.textContent = CURRENT_VERSION;
       if (updateStatusBox) updateStatusBox.className = "update-status-box is-latest";
       if (updateStatusText) {
-        updateStatusText.textContent = `✨ 当前运行版本 ${CURRENT_VERSION} 已是最新稳定版！`;
+        updateStatusText.textContent = `✨ ${CURRENT_VERSION} is the latest stable version!`;
       }
       if (changelogArea) changelogArea.style.display = "none";
       if (updateGuideCard) updateGuideCard.style.display = "none";
@@ -627,17 +640,55 @@
     if (!chestSwitch) return;
     chestSwitch.setAttribute("aria-checked", autoChest ? "true" : "false");
     chestCard.classList.toggle("is-on", autoChest);
-    chestBadge.textContent = autoChest ? "已启用" : "已关闭";
+    chestBadge.textContent = autoChest ? "Enabled" : "Disabled";
   }
 
   function stateTag(text) {
     const t = (text || "").trim();
     if (!t || t === "-") return ["idle", "—"];
-    if (t.indexOf("就绪") >= 0) return ["ready", "就绪"];
-    if (t.indexOf("冷却") >= 0) return ["cooldown", "冷却中"];
-    if (t.indexOf("被遮挡") >= 0) return ["cooldown", "被遮挡"];
-    if (t.indexOf("无法判定") >= 0 || t.indexOf("截取失败") >= 0) return ["idle", "识别中"];
-    return ["idle", t];
+    if (t.includes("Ready") || t.includes("就绪")) return ["ready", "Ready"];
+    if (t.includes("Cooling down") || t.includes("冷却")) return ["cooldown", "Cooling down"];
+    if (t.includes("Occluded") || t.includes("被遮挡")) return ["cooldown", "Occluded"];
+    if (
+      t.includes("Unable to determine") ||
+      t.includes("无法判定") ||
+      t.includes("Screenshot failed") ||
+      t.includes("截取失败")
+    ) {
+      return ["idle", "Checking"];
+    }
+    if (t.includes("Managed by target app") || t.includes("目标应用管理")) {
+      return ["idle", "Managed by target app"];
+    }
+    return ["idle", translateChestText(t)];
+  }
+
+  function translateChestText(text) {
+    const t = (text || "").trim();
+    const exact = {
+      "已关闭": "Disabled",
+      "待机": "Idle",
+      "未找到桌宠进程": "WuwaTappo process not found",
+      "桌宠面板打开或已隐藏": "WuwaTappo panel is open or hidden",
+      "桌宠正在移动": "WuwaTappo is moving",
+      "暂无宝箱（累计点击数不足）": "No chests yet (not enough clicks)",
+      "需要管理员权限（官方桌宠以管理员运行）": "Administrator permission is required",
+      "画面异常，本轮跳过": "Screen recognition failed; skipping this cycle",
+      "冷却中，稍后探测": "Cooling down; checking again later",
+      "已退出": "Stopped",
+      "目标应用管理": "Managed by target app",
+    };
+    if (exact[t]) return exact[t];
+    if (t.startsWith("已开启 ")) return t.replace("已开启 ", "Opened ").replace(" 宝箱", " chest");
+    if (t.startsWith("未连接 WuwaTappo Global Mac：")) {
+      return `WuwaTappo Global Mac is not connected: ${t.slice("未连接 WuwaTappo Global Mac：".length)}`;
+    }
+    if (t.startsWith("关闭自动开箱失败：")) {
+      return `Failed to disable Auto Chest: ${t.slice("关闭自动开箱失败：".length)}`;
+    }
+    if (t.startsWith("点击投递失败")) return t.replace("点击投递失败", "Click delivery failed");
+    if (t.startsWith("宝箱点击未生效")) return t.replace("宝箱点击未生效", "Chest click had no effect");
+    return t;
   }
 
   function applySlot(el, text) {
@@ -649,22 +700,22 @@
   }
 
   const STATE_HINT = {
-    idle: "待机中",
-    "no-pet": "未检测到桌宠，请先启动鸣潮桌宠",
-    "no-chest": "暂无宝箱，继续挂机即可解锁",
-    cooldown: "冷却中，到点自动开启",
-    occluded: "桌宠被其他窗口遮挡，等待中",
-    moving: "桌宠正在移动，稍后重试",
-    unknown: "画面识别异常，本轮跳过",
-    opened: "刚刚开启了一个宝箱",
-    retry: "点击未生效，稍后重试",
-    connecting: "正在连接 WuwaTappo Global Mac",
-    "relay-enabled": "已连接，等待目标应用自动开箱",
-    "no-target": "未找到 WuwaTappo Global Mac，请先启动它",
-    "need-admin": "需要管理员权限才能开箱",
-    error: "点击投递失败，稍后重试",
-    stopped: "已停止",
-    unsupported: "macOS 原生版暂未支持自动开箱",
+    idle: "Idle",
+    "no-pet": "WuwaTappo was not found; start it first",
+    "no-chest": "No chests yet; keep automating to unlock them",
+    cooldown: "Cooling down; it will open when ready",
+    occluded: "WuwaTappo is covered by another window; waiting",
+    moving: "WuwaTappo is moving; retrying shortly",
+    unknown: "Screen recognition failed; skipping this cycle",
+    opened: "A chest was just opened",
+    retry: "The click had no effect; retrying shortly",
+    connecting: "Connecting to WuwaTappo Global Mac",
+    "relay-enabled": "Connected; waiting for the target app to open chests",
+    "no-target": "WuwaTappo Global Mac was not found; start it first",
+    "need-admin": "Administrator permission is required to open chests",
+    error: "Click delivery failed; retrying shortly",
+    stopped: "Stopped",
+    unsupported: "Auto Chest is not supported by this macOS build",
   };
 
   // 开关状态由前端（localStorage）唯一决定，绝不用后端快照反向覆盖：
@@ -674,8 +725,8 @@
     if (!s) return;
     applySlot(slotLeft, s.left);
     applySlot(slotRight, s.right);
-    if (chestHint) chestHint.textContent = STATE_HINT[s.state] || s.detail || "待机中";
-    if (chestCount) chestCount.textContent = `已开启 ${s.opens_ok || 0} 次`;
+    if (chestHint) chestHint.textContent = STATE_HINT[s.state] || translateChestText(s.detail) || "Idle";
+    if (chestCount) { const count = s.opens_ok || 0; chestCount.textContent = `Opened ${count} time${count === 1 ? "" : "s"}`; }
     if (chestWarn) chestWarn.hidden = !(autoChest && s.elevated === false && s.state !== "unsupported");
   }
 
@@ -686,9 +737,9 @@
         enabled: true,
         elevated: false,
         state: "cooldown",
-        detail: "冷却中",
-        left: "冷却中",
-        right: "就绪",
+        detail: "Cooling down",
+        left: "Cooling down",
+        right: "Ready",
         opens_ok: 3,
         opens_failed: 0,
       });
@@ -698,7 +749,7 @@
       const s = await invoke("get_chest_status");
       applyChestStatus(s);
     } catch (e) {
-      /* 静默失败，不打扰用户 */
+      /* Ignore transient polling failures. */
     }
   }
 
@@ -720,7 +771,7 @@
   if (btnElevate) {
     btnElevate.addEventListener("click", async () => {
       if (!isTauri) {
-        alert("浏览器预览模式：正式版会以管理员权限重启程序");
+        alert("Browser preview mode: the packaged app can restart with administrator privileges.");
         return;
       }
       try {
@@ -750,7 +801,7 @@
       data: {
         tag_name: "v0.2.0",
         html_url: "https://github.com/To0Ru/AutoTappo/releases",
-        body: "1. 新增【自动开箱】功能，满额自动抽卡\n2. 优化后台静默避让策略，提升长时间挂机稳定性\n3. 支持更多自定义全局快捷键",
+        body: "1. Added Auto Chest support\n2. Improved background pause behavior for long sessions\n3. Added more custom global hotkey options",
       },
       source: "Gitee",
     });

@@ -22,7 +22,7 @@ pub fn ensure(app: &AppHandle) -> tauri::Result<()> {
 /// 新建主控制面板窗口
 pub fn open(app: &AppHandle) -> tauri::Result<()> {
     let w = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::default())
-        .title("AutoTappo · 鸣潮桌宠挂机助手")
+        .title("AutoTappo · WuwaTappo Background Assistant")
         .inner_size(452.0, 620.0)
         .min_inner_size(420.0, 560.0)
         .resizable(false)
