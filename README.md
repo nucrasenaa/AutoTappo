@@ -72,6 +72,7 @@
 - 在“系统设置 → 隐私与安全性”中允许 AutoTappo 的 **辅助功能**；如需全局按键状态检测，也允许 **输入监控**
 - macOS backend 使用 CoreGraphics 非打印功能键，不移动鼠标、不抢焦点
 - 自动开箱需要同时安装更新后的 **Wuwa Tappo Global Mac 1.0.0**；AutoTappo 与目标应用之间使用权限为 `0600` 的本地 Unix socket
+- macOS 面板底部可切换“隐藏 Dock 图标”；隐藏后仍可通过菜单栏托盘图标打开面板，偏好会保存在本机
 
 ---
 

@@ -39,6 +39,7 @@
   const btnBell = document.getElementById("btn-bell");
   const updateDot = document.getElementById("update-dot");
   const btnHide = document.getElementById("btn-hide");
+  const btnDock = document.getElementById("btn-dock");
   const btnQuit = document.getElementById("btn-quit");
 
   // 热键自定义 DOM
@@ -240,6 +241,35 @@
   };
 
   if (btnHide) btnHide.addEventListener("click", hideWindow);
+
+  // macOS menu-bar utility mode: keep the tray icon and control panel, but
+  // optionally remove AutoTappo from the Dock. The preference is local-only.
+  const isMacOS = isTauri && /Macintosh|Mac OS X/i.test(navigator.userAgent);
+  let hideDock = localStorage.getItem("autotappo.hideDock") === "1";
+  const setDockVisibility = async () => {
+    if (!isMacOS || !window.__TAURI__?.app?.setDockVisibility) return;
+    await window.__TAURI__.app.setDockVisibility(!hideDock);
+  };
+  const renderDockButton = () => {
+    if (!btnDock) return;
+    btnDock.hidden = !isMacOS;
+    btnDock.textContent = hideDock ? "显示 Dock 图标" : "隐藏 Dock 图标";
+    btnDock.setAttribute("aria-pressed", hideDock ? "true" : "false");
+  };
+  if (btnDock) {
+    btnDock.addEventListener("click", async () => {
+      hideDock = !hideDock;
+      localStorage.setItem("autotappo.hideDock", hideDock ? "1" : "0");
+      renderDockButton();
+      try {
+        await setDockVisibility();
+      } catch (err) {
+        console.error("Failed to change Dock visibility:", err);
+      }
+    });
+  }
+  renderDockButton();
+  setDockVisibility().catch((err) => console.error("Failed to apply Dock visibility:", err));
 
   if (btnQuit) {
     btnQuit.addEventListener("click", async () => {
