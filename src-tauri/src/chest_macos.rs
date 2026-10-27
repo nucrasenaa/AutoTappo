@@ -1,16 +1,23 @@
-//! Native macOS chest status adapter.
+//! Native macOS chest adapter.
 //!
-//! The Windows version can address WuwaTappo's private `DesktopCatInput`
-//! window and its Win32 region. macOS has no equivalent private-window
-//! message channel. Do not synthesize arbitrary screen clicks here: that
-//! would steal the user's focus and could click the wrong application.
-//!
-//! The IPC surface remains available so the UI gives an explicit, safe status
-//! instead of silently claiming that auto-open-chest works.
+//! Native WuwaTappo Global Mac owns the chest state and API session. AutoTappo
+//! therefore sends a narrowly-scoped per-user Unix-socket command to that app;
+//! the target frontend validates readiness and performs its own `openChest`
+//! flow. No blind screen-wide click or focus stealing is used.
 
 use serde::Serialize;
+use serde_json::json;
+use std::env;
+use std::io::Write;
+use std::os::unix::net::UnixStream;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
+
+const TARGET_IDENTIFIER: &str = "dev.w33d.wuwatappo.global.mac";
+const RETRY_INTERVAL: Duration = Duration::from_secs(2);
 
 #[derive(Clone, Serialize)]
 pub struct ChestSnapshot {
@@ -30,8 +37,8 @@ impl Default for ChestSnapshot {
         Self {
             enabled: false,
             elevated: false,
-            state: "unsupported".into(),
-            detail: "macOS native build: auto-open-chest is not available yet".into(),
+            state: "idle".into(),
+            detail: "เปิด WuwaTappo Global Mac เพื่อเชื่อมต่อระบบเปิดกล่อง".into(),
             left: "—".into(),
             right: "—".into(),
             opens_ok: 0,
@@ -47,6 +54,66 @@ pub struct ChestController {
     snapshot: Arc<Mutex<ChestSnapshot>>,
 }
 
+fn socket_path() -> Option<PathBuf> {
+    let home = env::var_os("HOME")?;
+    Some(
+        PathBuf::from(home)
+            .join("Library/Application Support")
+            .join(TARGET_IDENTIFIER)
+            .join("autotappo.sock"),
+    )
+}
+
+fn send_command(enabled: bool) -> Result<(), String> {
+    let path = socket_path().ok_or_else(|| "HOME is unavailable".to_string())?;
+    let mut stream = UnixStream::connect(&path)
+        .map_err(|error| format!("WuwaTappo socket unavailable: {error}"))?;
+    stream
+        .set_write_timeout(Some(Duration::from_millis(500)))
+        .map_err(|error| error.to_string())?;
+    let payload = json!({
+        "command": "set_auto_chest",
+        "enabled": enabled,
+    });
+    writeln!(stream, "{payload}").map_err(|error| error.to_string())
+}
+
+fn update_snapshot(snapshot: &Mutex<ChestSnapshot>, enabled: bool, result: Result<(), String>) {
+    let Ok(mut state) = snapshot.lock() else {
+        return;
+    };
+    state.enabled = enabled;
+    state.elevated = true;
+    state.last_event_unix = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_secs())
+        .unwrap_or(0);
+    match result {
+        Ok(()) if enabled => {
+            state.state = "relay-enabled".into();
+            state.detail = "已连接 WuwaTappo Global Mac；由目标应用自动判断并开启宝箱".into();
+            state.left = "目标应用管理".into();
+            state.right = "目标应用管理".into();
+        }
+        Ok(()) => {
+            state.state = "idle".into();
+            state.detail = "已关闭自动开箱".into();
+            state.left = "—".into();
+            state.right = "—".into();
+        }
+        Err(error) if enabled => {
+            state.state = "no-target".into();
+            state.detail = format!("未连接 WuwaTappo Global Mac：{error}");
+            state.left = "—".into();
+            state.right = "—".into();
+        }
+        Err(error) => {
+            state.state = "error".into();
+            state.detail = format!("关闭自动开箱失败：{error}");
+        }
+    }
+}
+
 impl ChestController {
     pub fn new() -> Self {
         Self {
@@ -58,15 +125,12 @@ impl ChestController {
 
     pub fn set_enabled(&self, on: bool) {
         self.enabled.store(on, Ordering::Release);
-        if let Ok(mut snapshot) = self.snapshot.lock() {
-            snapshot.enabled = on;
-            snapshot.state = "unsupported".into();
-            snapshot.detail = if on {
-                "macOS native build: auto-open-chest needs a target-specific Accessibility adapter"
-                    .into()
-            } else {
-                "Auto-open-chest is disabled on macOS native build".into()
-            };
+        if !on {
+            update_snapshot(&self.snapshot, false, send_command(false));
+        } else if let Ok(mut state) = self.snapshot.lock() {
+            state.enabled = true;
+            state.state = "connecting".into();
+            state.detail = "กำลังเชื่อมต่อ WuwaTappo Global Mac…".into();
         }
     }
 
@@ -78,8 +142,20 @@ impl ChestController {
     }
 
     pub fn start_worker(&self) {
-        // Intentionally no worker: a no-op status is safer than clicking the
-        // frontmost application when the target adapter is unavailable.
+        let enabled = Arc::clone(&self.enabled);
+        let shutdown = Arc::clone(&self.shutdown);
+        let snapshot = Arc::clone(&self.snapshot);
+        thread::Builder::new()
+            .name("autotappo-macos-chest".into())
+            .spawn(move || {
+                while !shutdown.load(Ordering::Acquire) {
+                    if enabled.load(Ordering::Acquire) {
+                        update_snapshot(&snapshot, true, send_command(true));
+                    }
+                    thread::sleep(RETRY_INTERVAL);
+                }
+            })
+            .expect("could not start macOS chest bridge");
     }
 }
 

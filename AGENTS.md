@@ -9,9 +9,9 @@
 **AutoTappo** 是一款专为库洛游戏《鸣潮》（Wuthering Waves）官方桌面宠物挂件 **WuwaTappo**（鸣潮桌宠）打造的**超轻量、纯静默、高拟真后台连点与数据看板助手**。
 
 > **跨平台说明（2026-10）**：Windows backend 继续使用下文记录的 Win32
-> 区域/消息方案；macOS backend 已改为 CoreGraphics 原生 ARM64，支持后台
-> 功能键挂机，但自动开箱在 macOS 上会安全地报告 `unsupported`，不会向前台
-> 应用发送盲目鼠标点击。
+> 区域/消息方案；macOS backend 已改为 CoreGraphics 原生 ARM64。macOS 自动开箱
+> 通过每用户 `0600` Unix socket 通知配套的 Wuwa Tappo Global Mac，由目标
+> WebView 自己判断就绪并执行 `zl(place)`；不会向前台应用发送盲目鼠标点击。
 
 ### 核心体验准则
 1. **绝对 0 鼠标干涉**：严禁任何物理鼠标指针抖动、位移或拖拽；
@@ -288,7 +288,8 @@ autotappo/
      `CGEventPost`，不移动鼠标、不抢焦点；
    - 兼容前端原有 Windows VK 持久化值，后端在发送前映射为 macOS key code；
    - macOS 构建不读取 Windows manifest，也不链接 `user32/gdi32/winmm`；
-   - 自动开箱不会伪造屏幕点击，macOS UI 明确显示暂未支持。
+   - `chest_macos.rs` 仅发送 `set_auto_chest` 控制消息到 Wuwa Tappo Global Mac；
+     目标前端负责就绪判定与现有官方 `openChest` 调用链，不伪造网络请求或屏幕点击。
 
 ---
 
@@ -341,6 +342,17 @@ autotappo/
 - 严禁伪造 `api/frontend/chests/open` 等 HTTP/jsonp 请求；
 - 只允许驱动官方 WebView 通过原生消息流执行真实点击；
 - 绝不移动真实鼠标指针（不使用 `SendInput` / `mouse_event` / `SetCursorPos`）。
+
+### 6.5 macOS 原生桥接（`src-tauri/src/chest_macos.rs`）
+
+- AutoTappo 连接 `~/Library/Application Support/dev.w33d.wuwatappo.global.mac/autotappo.sock`；
+  Wuwa Tappo 创建该 socket 时强制设为 `0600`。
+- `set_auto_chest` 只传递启停状态；Wuwa Tappo 前端收到 `autotappo-auto-chest` 后，
+  每秒检查 `qn` / `Un`，并调用已存在的 `zl("left"|"right")`。
+- `zl` 内部仍使用官方 `openChest({ place, click_num })`，所以 session、点击消耗、
+  奖励与冷却状态均由目标应用维护；AutoTappo 不接触账号凭据，也不重放 API。
+- Wuwa Tappo 未启动或仍是旧版时，AutoTappo 状态为 `no-target` 并每 2 秒重试，
+  不会改为向当前前台应用发送坐标点击。
 
 ---
 
